@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Admin Dashboard</title>
+
+    <link rel="stylesheet" href="layout.css">
+
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        select,
+        input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <h2>Admin</h2>
+
+        <a href="dashboard.html">Dashboard</a>
+        <a href="products.html">Products</a>
+        <a href="producers.html">Producers</a>
+        <a href="certification_types.html">Certification Types</a>
+        <a href="certifications.html">Certifications</a>
+        <a href="batch.html">Batch</a>
+        <a href="qrcodes.html">QR Codes</a>
+        <a href="scanlogs.html">Scan Logs</a>
+
+    </div>
+
+    <div class="main">
+
+        <h1>Dashboard</h1>
+
+        <div style="display:flex;gap:20px">
+
+            <div class="card" style="flex:1">
+
+                <h3>Total QR Codes</h3>
+                <p id="totalQR">0</p>
+
+            </div>
+
+            <div class="card" style="flex:1">
+
+                <h3>Total Scans</h3>
+                <p id="totalScan">0</p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        async function loadStats() {
+
+            const res = await fetch("/admin/dashboard")
+            const data = await res.json()
+
+            document.getElementById("totalQR").innerText = data.totalQR
+            document.getElementById("totalScan").innerText = data.totalScans
+        }
+
+        loadStats()
+
+    </script>
+
+</body>
+
+</html>

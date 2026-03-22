@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Certification Types</title>
+    <link rel="stylesheet" href="layout.css">
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Admin</h2>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="products.html">Products</a>
+        <a href="producers.html">Producers</a>
+        <a href="certification_types.html">Certification Types</a>
+        <a href="certifications.html">Certifications</a>
+        <a href="batch.html">Batch</a>
+        <a href="qrcodes.html">QR Codes</a>
+        <a href="scanlogs.html">Scan Logs</a>
+    </div>
+
+    <div class="main">
+
+        <h1>Certification Types</h1>
+
+        <div class="card">
+
+            <div class="form-group">
+                <label>ID</label>
+                <input id="id">
+            </div>
+
+            <div class="form-group">
+                <label>Name</label>
+                <input id="name">
+            </div>
+
+            <button onclick="createType()">Create</button>
+
+        </div>
+
+        <div class="card">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="table"></tbody>
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        async function load() {
+
+            const data = await fetch("/admin/api/cert-types").then(r => r.json())
+
+            document.getElementById("table").innerHTML =
+                data.map(t => `
+        <tr>
+            <td>${t.certification_type_id}</td>
+            <td>${t.certification_type}</td>
+            <td>
+                <button onclick="del(${t.certification_type_id})" style="background:red">Delete</button>
+            </td>
+        </tr>
+        `).join("")
+        }
+
+        async function createType() {
+
+            const id = document.getElementById("id").value
+            const name = document.getElementById("name").value
+
+            await fetch("/admin/api/cert-types", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, name })
+            })
+
+            load()
+        }
+
+        async function del(id) {
+            await fetch("/admin/api/cert-types/" + id, { method: "DELETE" })
+            load()
+        }
+
+        load()
+
+    </script>
+
+</body>
+
+</html>

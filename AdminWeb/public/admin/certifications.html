@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Certifications</title>
+    <link rel="stylesheet" href="layout.css">
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Admin</h2>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="products.html">Products</a>
+        <a href="producers.html">Producers</a>
+        <a href="certification_types.html">Certification Types</a>
+        <a href="certifications.html">Certifications</a>
+        <a href="batch.html">Batch</a>
+        <a href="qrcodes.html">QR Codes</a>
+        <a href="scanlogs.html">Scan Logs</a>
+    </div>
+
+    <div class="main">
+
+        <h1>Certifications</h1>
+
+        <div class="card">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+
+                <div class="form-group">
+                    <label>ID</label>
+                    <input id="id">
+                </div>
+
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="type"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Product</label>
+                    <select id="product"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Producer</label>
+                    <select id="producer"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Number</label>
+                    <input id="number">
+                </div>
+
+                <div class="form-group">
+                    <label>Issue Date</label>
+                    <input type="date" id="issue">
+                </div>
+
+                <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="date" id="expiry">
+                </div>
+
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input id="image">
+                </div>
+
+            </div>
+
+            <button onclick="create()">Create</button>
+
+        </div>
+
+        <div class="card">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Product</th>
+                        <th>Producer</th>
+                        <th>Number</th>
+                        <th>Expiry</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="table"></tbody>
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        async function loadDropdown() {
+
+            const types = await fetch("/admin/api/cert-types").then(r => r.json())
+            const products = await fetch("/admin/api/products").then(r => r.json())
+            const producers = await fetch("/admin/api/producers").then(r => r.json())
+
+            document.getElementById("type").innerHTML =
+                types.map(t => `<option value="${t.certification_type_id}">${t.certification_type}</option>`).join("")
+
+            document.getElementById("product").innerHTML =
+                products.map(p => `<option value="${p.product_id}">${p.product_name}</option>`).join("")
+
+            document.getElementById("producer").innerHTML =
+                producers.map(p => `<option value="${p.producer_id}">${p.producer_name}</option>`).join("")
+        }
+
+        async function load() {
+
+            const data = await fetch("/admin/api/certifications").then(r => r.json())
+
+            document.getElementById("table").innerHTML =
+                data.map(c => `
+        <tr>
+            <td>${c.certification_id}</td>
+            <td>${c.certification_type}</td>
+            <td>${c.product_name}</td>
+            <td>${c.producer_name}</td>
+            <td>${c.certification_number}</td>
+            <td>${c.expiry_date?.split("T")[0]}</td>
+            <td>
+                <button onclick="del(${c.certification_id})" style="background:red">Delete</button>
+            </td>
+        </tr>
+        `).join("")
+        }
+
+        async function create() {
+
+            const body = {
+                id: id.value,
+                type: type.value,
+                product: product.value,
+                producer: producer.value,
+                number: number.value,
+                issue: issue.value,
+                expiry: expiry.value,
+                image: image.value
+            }
+
+            await fetch("/admin/api/certifications", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            })
+
+            load()
+        }
+
+        async function del(id) {
+            await fetch("/admin/api/certifications/" + id, { method: "DELETE" })
+            load()
+        }
+
+        loadDropdown()
+        load()
+
+    </script>
+
+</body>
+
+</html>

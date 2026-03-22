@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>QR Codes</title>
+
+    <link rel="stylesheet" href="layout.css">
+
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>Admin</h2>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="products.html">Products</a>
+        <a href="producers.html">Producers</a>
+        <a href="certification_types.html">Certification Types</a>
+        <a href="certifications.html">Certifications</a>
+        <a href="batch.html">Batch</a>
+        <a href="qrcodes.html">QR Codes</a>
+        <a href="scanlogs.html">Scan Logs</a>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <h1>QR Code Generator</h1>
+
+        <div class="card">
+
+            <!-- CHỌN BATCH -->
+            <div class="form-group">
+                <label>Chọn lô hàng</label>
+                <select id="batch"></select>
+            </div>
+
+            <!-- INFO -->
+            <div id="batchInfo" style="margin-bottom:15px; font-size:14px; color:#333;">
+                Chọn lô hàng để xem thông tin...
+            </div>
+
+            <!-- SỐ LƯỢNG -->
+            <div class="form-group">
+                <label>Số lượng QR</label>
+                <input type="number" id="amount" placeholder="Ví dụ: 100">
+            </div>
+
+            <button onclick="generateQR()">Generate</button>
+
+            <div id="message"></div>
+
+        </div>
+
+        <!-- DANH SÁCH QR -->
+        <div class="card">
+            <h3>QR vừa tạo</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>QR Value</th>
+                    </tr>
+                </thead>
+                <tbody id="qrTable"></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>Danh sách QR theo Batch</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>QR Value</th>
+                        <th>Activated</th>
+                        <th>Time Activated</th>
+                    </tr>
+                </thead>
+                <tbody id="batchQRTable"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+
+        async function loadBatch() {
+
+            const res = await fetch("/admin/api/batch")
+            const data = await res.json()
+
+            let html = ""
+
+            data.forEach(b => {
+                html += `<option value="${b.batch_id}">Batch ${b.batch_id}</option>`
+            })
+
+            document.getElementById("batch").innerHTML = html
+
+            if (data.length > 0) {
+                loadBatchInfo()
+                loadBatchQR()
+            }
+        }
+
+        document.getElementById("batch").addEventListener("change", () => {
+            loadBatchInfo()
+            loadBatchQR()
+        })
+
+        async function loadBatchInfo() {
+
+            const id = document.getElementById("batch").value
+
+            const res = await fetch("/admin/api/batch/" + id)
+            const data = await res.json()
+
+            if (!data) {
+                document.getElementById("batchInfo").innerHTML = "Không có dữ liệu"
+                return
+            }
+
+            document.getElementById("batchInfo").innerHTML = `
+        <b>Sản phẩm:</b> ${data.product_name}<br>
+        <b>Nhà sản xuất:</b> ${data.producer_name}<br>
+        <b>Nơi trồng:</b> ${data.farm_location}<br>
+        <b>Đóng gói:</b> ${data.packing_location}
+    `
+        }
+
+        async function generateQR() {
+
+            const batch_id = document.getElementById("batch").value
+            const amount = document.getElementById("amount").value
+            const message = document.getElementById("message")
+
+            if (!amount || amount <= 0) {
+                message.innerHTML = "<span style='color:red'>Nhập số lượng hợp lệ</span>"
+                return
+            }
+
+            const res = await fetch("/admin/api/qrcode/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ batch_id, amount })
+            })
+
+            const result = await res.json()
+
+            if (!res.ok) {
+                message.innerHTML = "<span style='color:red'>" + result.message + "</span>"
+                return
+            }
+
+            message.innerHTML = "<span style='color:green'>" + result.message + "</span>"
+
+            // HIỂN THỊ QR VỪA TẠO
+            let html = ""
+            result.data.forEach((code, index) => {
+                html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${code}</td>
+            </tr>
+        `
+            })
+
+            document.getElementById("qrTable").innerHTML = html
+
+        }
+
+        async function loadBatchQR() {
+
+            const batch_id = document.getElementById("batch").value
+
+            const res = await fetch("/admin/api/qrcode/" + batch_id)
+            const data = await res.json()
+
+            let html = ""
+
+            data.forEach(q => {
+
+                let status = q.is_activated ? "Đã quét" : "Chưa quét"
+
+                let time = q.time_activated
+                    ? new Date(q.time_activated).toLocaleString("vi-VN", {
+                        timeZone: "UTC"
+                    })
+                    : ""
+
+                html += `
+            <tr>
+                <td>${q.qr_id}</td>
+                <td>${q.code_value}</td>
+                <td>${status}</td>
+                <td>${time}</td>
+            </tr>
+        `
+            })
+
+            document.getElementById("batchQRTable").innerHTML = html
+        }
+
+        loadBatch()
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Truy xuất nguồn gốc</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f4f7;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #message {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0 30px 0;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .good {
+            background: #e8f7ee;
+            color: #1e7e34;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .fake {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .section {
+            margin-top: 30px;
+        }
+
+        .section h2 {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info {
+            margin: 6px 0;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .cert-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background: #fafafa;
+        }
+
+        .cert-img {
+            margin-top: 10px;
+            max-width: 200px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Truy xuất nguồn gốc</h1>
+
+        <div id="message"></div>
+
+        <div id="product_info">
+
+            <!-- COMPANY -->
+            <div class="section">
+                <h2>Thông tin công ty</h2>
+
+                <div class="info">
+                    <span class="label">Công ty:</span>
+                    <span id="producer"></span>
+                </div>
+
+                <div class="info">
+                    <span class="label">Địa chỉ:</span>
+                    <span id="address"></span>
+                </div>
+            </div>
+
+            <!-- PRODUCT -->
+            <div class="section">
+                <h2>Thông tin sản phẩm</h2>
+
+                <div class="info">
+                    <span class="label">Tên sản phẩm:</span>
+                    <span id="product"></span>
+                </div>
+
+                <div class="info">
+                    <span class="label">Nơi trồng:</span>
+                    <span id="farm"></span>
+                </div>
+
+                <div class="info">
+                    <span class="label">Nơi đóng gói:</span>
+                    <span id="packing_location"></span>
+                </div>
+
+                <div class="info">
+                    <span class="label">Ngày thu hoạch:</span>
+                    <span id="harvest"></span>
+                </div>
+
+                <div class="info">
+                    <span class="label">Ngày đóng gói:</span>
+                    <span id="packing"></span>
+                </div>
+
+                <div class="info">
+                    <span class="label">Ngày giao hàng:</span>
+                    <span id="delivery"></span>
+                </div>
+            </div>
+
+            <!-- CERTIFICATIONS -->
+            <div class="section">
+                <h2>Thông tin chứng nhận sản phẩm</h2>
+                <div id="cert_list"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const code = window.location.pathname.split("/").pop()
+
+        const message = document.getElementById("message")
+        const infoSection = document.getElementById("product_info")
+
+        // =======================
+        // VERIFY QR
+        // =======================
+        fetch("/verify/" + code)
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.status === "authentic") {
+
+                    message.className = "good"
+                    message.innerText =
+                        "Sản phẩm hợp lệ. Đây là lần quét đầu tiên của mã truy xuất."
+
+                }
+                else if (data.status === "scanned") {
+
+                    message.className = "warning"
+                    message.innerText =
+                        "Mã QR này đã được quét lần đầu vào lúc " + data.first_scan +
+                        ". Nếu bạn chưa từng quét trước đó, sản phẩm có thể đã bị sao chép."
+
+                }
+                else {
+
+                    message.className = "fake"
+                    message.innerText =
+                        "Mã truy xuất không tồn tại. Sản phẩm có khả năng là hàng giả."
+
+                    infoSection.style.display = "none"
+                }
+
+            })
+
+        // =======================
+        // LOAD PRODUCT DATA
+        // =======================
+        fetch("/product/" + code)
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.length === 0) return
+
+                const p = data[0] // chỉ lấy 1 để hiển thị info chung
+
+                // info chung
+                document.getElementById("product").innerText = p.product_name
+                document.getElementById("producer").innerText = p.producer_name
+                document.getElementById("address").innerText = p.address
+
+                document.getElementById("farm").innerText = p.farm_location
+                document.getElementById("packing_location").innerText = p.packing_location
+
+                document.getElementById("harvest").innerText = new Date(p.harvest_date).toLocaleDateString()
+                document.getElementById("packing").innerText = new Date(p.packing_date).toLocaleDateString()
+                document.getElementById("delivery").innerText = new Date(p.delivery_date).toLocaleDateString()
+
+                // render nhiều chứng nhận
+                const certContainer = document.getElementById("cert_list")
+                certContainer.innerHTML = ""
+
+                data.forEach(cert => {
+
+                    // nếu không có cert (LEFT JOIN null)
+                    if (!cert.certification_type) return
+
+                    certContainer.innerHTML += `
+    <div class="cert-box">
+
+        <div class="info">
+            <span class="label">Tiêu chuẩn:</span> ${cert.certification_type}
+        </div>
+
+        <div class="info">
+            <span class="label">Mã chứng nhận:</span> ${cert.certification_number}
+        </div>
+
+        <div class="info">
+            <span class="label">Hiệu lực đến:</span> ${new Date(cert.expiry_date).toLocaleDateString()}
+        </div>
+
+        ${cert.certification_image_url
+                            ? `<img src="${cert.certification_image_url}" class="cert-img">`
+                            : ""
+                        }
+
+    </div>
+`
+                })
+
+            })
+    </script>
+
+</body>
+
+</html>

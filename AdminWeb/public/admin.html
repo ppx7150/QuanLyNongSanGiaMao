@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #2c3e50;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            margin: 10px 0;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: #f4f6f8;
+            padding: 20px;
+            margin: 10px;
+            display: inline-block;
+            width: 200px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <h2>Admin</h2>
+
+        <a href="dashboard.html">Dashboard</a>
+        <a href="products.html">Products</a>
+        <a href="producers.html">Producers</a>
+        <a href="certification_types.html">Certification Types</a>
+        <a href="certifications.html">Certifications</a>
+        <a href="batch.html">Batch</a>
+        <a href="qrcodes.html">QR Codes</a>
+        <a href="scanlogs.html">Scan Logs</a>
+
+    </div>
+
+    <div class="content">
+
+        <h1>Dashboard</h1>
+
+        <div class="card">
+            Total QR: <span id="totalQR"></span>
+        </div>
+
+        <div class="card">
+            Total Scans: <span id="totalScans"></span>
+        </div>
+
+    </div>
+
+    <script>
+
+        fetch("/admin/dashboard")
+            .then(res => res.json())
+            .then(data => {
+
+                document.getElementById("totalQR").innerText = data.totalQR
+                document.getElementById("totalScans").innerText = data.totalScans
+
+            })
+
+    </script>
+
+</body>
+
+</html>

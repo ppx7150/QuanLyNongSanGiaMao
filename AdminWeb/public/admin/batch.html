@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+    <title>Batch</title>
+
+    <link rel="stylesheet" href="layout.css">
+
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        select,
+        input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <h2>Admin</h2>
+
+        <a href="dashboard.html">Dashboard</a>
+        <a href="products.html">Products</a>
+        <a href="producers.html">Producers</a>
+        <a href="certification_types.html">Certification Types</a>
+        <a href="certifications.html">Certifications</a>
+        <a href="batch.html">Batch</a>
+        <a href="qrcodes.html">QR Codes</a>
+        <a href="scanlogs.html">Scan Logs</a>
+
+    </div>
+
+    <div class="main">
+
+        <h1>Create Batch</h1>
+
+        <div class="card">
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Sản phẩm</label>
+                    <select id="product"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nhà sản xuất</label>
+                    <select id="producer"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Mã lô hàng (Batch ID)</label>
+                    <input id="batch_id" placeholder="Batch ID">
+                </div>
+
+                <div class="form-group">
+                    <label>Nơi trồng</label>
+                    <input id="farm" placeholder="Farm location">
+                </div>
+
+                <div class="form-group">
+                    <label>Nơi đóng gói</label>
+                    <input id="packing" placeholder="Packing location">
+                </div>
+
+                <div class="form-group">
+                    <label>Ngày thu hoạch</label>
+                    <input type="date" id="harvest">
+                </div>
+
+                <div class="form-group">
+                    <label>Ngày đóng gói</label>
+                    <input type="date" id="packDate">
+                </div>
+
+                <div class="form-group">
+                    <label>Ngày giao hàng</label>
+                    <input type="date" id="delivery">
+                </div>
+
+            </div>
+
+            <br>
+
+            <button id="submitBtn" onclick="createBatch()">Create</button>
+            <button id="cancelBtn" onclick="cancelEdit()" style="display:none; background:gray">Cancel</button>
+
+            <div id="message"></div>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Batch List</h3>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Product</th>
+                        <th>Producer</th>
+                        <th>Farm</th>
+                        <th>Packing</th>
+                        <th>Harvest Date</th>
+                        <th>Packing Date</th>
+                        <th>Delivery Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="table"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        let editingBatchId = null
+
+        async function loadDropdowns() {
+
+            const pRes = await fetch("/admin/api/products")
+            const products = await pRes.json()
+
+            const prRes = await fetch("/admin/api/producers")
+            const producers = await prRes.json()
+
+            let pHtml = ""
+            products.forEach(p => {
+                pHtml += `<option value="${p.product_id}">
+    [${p.product_id}] ${p.product_name}
+</option>`
+            })
+
+            let prHtml = ""
+            producers.forEach(p => {
+                prHtml += `<option value="${p.producer_id}">
+    [${p.producer_id}] ${p.producer_name}
+</option>`
+            })
+
+            document.getElementById("product").innerHTML = pHtml
+            document.getElementById("producer").innerHTML = prHtml
+
+        }
+
+        async function loadBatch() {
+
+            const res = await fetch("/admin/api/batch")
+            const data = await res.json()
+
+            let html = ""
+
+            data.forEach(b => {
+
+                html += `
+<tr>
+<td>${b.batch_id}</td>
+<td>${b.product_name}</td>
+<td>${b.producer_name}</td>
+<td>${b.farm_location}</td>
+<td>${b.packing_location}</td>
+<td>${formatDate(b.harvest_date)}</td>
+<td>${formatDate(b.packing_date)}</td>
+<td>${formatDate(b.delivery_date)}</td>
+<td>
+<button onclick="editBatch(${b.batch_id}, ${b.product_id}, ${b.producer_id}, \`${b.farm_location}\`, \`${b.packing_location}\`, '${b.harvest_date}', '${b.packing_date}', '${b.delivery_date}')">Edit</button>
+<button onclick="deleteBatch(${b.batch_id})" style="background:red">Delete</button>
+</td>
+</tr>
+`
+
+            })
+
+            document.getElementById("table").innerHTML = html
+
+        }
+
+        function formatDate(date) {
+            if (!date) return ""
+            return new Date(date).toLocaleDateString("vi-VN")
+        }
+
+        async function createBatch() {
+
+            const batch_id = document.getElementById("batch_id").value
+            const message = document.getElementById("message")
+
+            const data = {
+                product_id: document.getElementById("product").value,
+                producer_id: document.getElementById("producer").value,
+                farm_location: document.getElementById("farm").value,
+                packing_location: document.getElementById("packing").value,
+                harvest_date: document.getElementById("harvest").value,
+                packing_date: document.getElementById("packDate").value,
+                delivery_date: document.getElementById("delivery").value
+            }
+
+            try {
+
+                if (editingBatchId) {
+
+                    const newBatchId = document.getElementById("batch_id").value
+
+                    const res = await fetch("/admin/api/batch/" + editingBatchId, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            batch_id: newBatchId,
+                            ...data
+                        })
+                    })
+
+                    const result = await res.json()
+
+                    if (!res.ok) {
+                        message.innerHTML = "<span style='color:red'>" + result.message + "</span>"
+                        return
+                    }
+
+                    message.innerHTML = "<span style='color:green'>Cập nhật thành công</span>"
+
+                    editingBatchId = null
+                }
+
+                else {
+
+                    // check trùng
+                    const check = await fetch("/admin/api/batch/check/" + batch_id)
+                    const checkData = await check.json()
+
+                    if (checkData.exists) {
+                        message.innerHTML = "<span style='color:red'>Batch ID đã tồn tại</span>"
+                        return
+                    }
+
+                    await fetch("/admin/api/batch", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ batch_id, ...data })
+                    })
+
+                    message.innerHTML = "<span style='color:green'>Tạo batch thành công</span>"
+                }
+
+                loadBatch()
+
+            } catch {
+
+                message.innerHTML = "<span style='color:red'>Lỗi</span>"
+
+            }
+
+        }
+
+        async function deleteBatch(id) {
+
+            if (!confirm("Bạn có chắc muốn xóa batch này?")) return
+
+            await fetch("/admin/api/batch/" + id, {
+                method: "DELETE"
+            })
+
+            loadBatch()
+
+        }
+
+        function editBatch(id, product_id, producer_id, farm, packing, harvest, pack, delivery) {
+
+            editingBatchId = id
+
+            document.getElementById("batch_id").value = id
+            document.getElementById("product").value = product_id
+            document.getElementById("producer").value = producer_id
+            document.getElementById("farm").value = farm
+            document.getElementById("packing").value = packing
+
+            document.getElementById("harvest").value = formatInputDate(harvest)
+            document.getElementById("packDate").value = formatInputDate(pack)
+            document.getElementById("delivery").value = formatInputDate(delivery)
+
+            document.getElementById("submitBtn").innerText = "Update"
+            document.getElementById("cancelBtn").style.display = "inline-block"
+            document.getElementById("batch_id").disabled = true
+
+        }
+
+        function cancelEdit() {
+
+            editingBatchId = null
+
+            // reset form
+            document.getElementById("batch_id").value = ""
+            document.getElementById("farm").value = ""
+            document.getElementById("packing").value = ""
+            document.getElementById("harvest").value = ""
+            document.getElementById("packDate").value = ""
+            document.getElementById("delivery").value = ""
+
+            document.getElementById("submitBtn").innerText = "Create"
+            document.getElementById("cancelBtn").style.display = "none"
+            document.getElementById("batch_id").disabled = false
+
+        }
+
+        function formatInputDate(date) {
+            if (!date) return ""
+            return new Date(date).toISOString().split("T")[0]
+        }
+
+        loadDropdowns()
+        loadBatch()
+
+    </script>
+
+</body>
+
+</html>

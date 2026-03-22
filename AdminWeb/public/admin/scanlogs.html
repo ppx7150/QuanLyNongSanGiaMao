@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Scan Logs</title>
+
+    <link rel="stylesheet" href="layout.css">
+
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>Admin</h2>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="products.html">Products</a>
+        <a href="producers.html">Producers</a>
+        <a href="certification_types.html">Certification Types</a>
+        <a href="certifications.html">Certifications</a>
+        <a href="batch.html">Batch</a>
+        <a href="qrcodes.html">QR Codes</a>
+        <a href="scanlogs.html">Scan Logs</a>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <h1>Scan Logs</h1>
+
+        <!-- TABLE -->
+        <div class="card">
+            <h3>Scan History</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>QR ID</th>
+                        <th>Time</th>
+                        <th>IP</th>
+                        <th>Location</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="scanTable"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+
+        // LOAD DATA
+        async function loadLogs() {
+
+            const res = await fetch("/admin/scanlogs")
+            const data = await res.json()
+
+            let html = ""
+
+            data.forEach(s => {
+
+                html += `
+        <tr>
+            <td>${s.scan_id}</td>
+            <td>${s.qr_id}</td>
+            <td>${formatDate(s.scan_time)}</td>
+            <td>${s.ip_address || ""}</td>
+            <td>${s.location || ""}</td>
+            <td>
+                <button style="background:red"
+                    onclick="deleteLog(${s.scan_id})">
+                    Delete
+                </button>
+            </td>
+        </tr>
+        `
+            })
+
+            document.getElementById("scanTable").innerHTML = html
+        }
+
+        // FORMAT TIME
+        function formatDate(date) {
+            return new Date(date).toLocaleString("vi-VN", {
+                timeZone: "UTC"
+            })
+        }
+
+        // DELETE
+        async function deleteLog(id) {
+
+            if (!confirm("Xóa log này?")) return
+
+            await fetch("/admin/api/scanlogs/" + id, {
+                method: "DELETE"
+            })
+
+            loadLogs()
+        }
+
+        // INIT
+        loadLogs()
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+    <title>Products</title>
+
+    <link rel="stylesheet" href="layout.css">
+
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .form-grid input,
+        .form-grid textarea {
+            width: 100%;
+        }
+
+        textarea {
+            grid-column: span 2;
+            resize: none;
+            height: 80px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <h2>Admin</h2>
+
+        <a href="dashboard.html">Dashboard</a>
+        <a href="products.html">Products</a>
+        <a href="producers.html">Producers</a>
+        <a href="certification_types.html">Certification Types</a>
+        <a href="certifications.html">Certifications</a>
+        <a href="batch.html">Batch</a>
+        <a href="qrcodes.html">QR Codes</a>
+        <a href="scanlogs.html">Scan Logs</a>
+
+    </div>
+
+    <div class="main">
+
+        <div class="header">
+            <h1>Products</h1>
+        </div>
+
+        <!-- FORM -->
+        <div class="card">
+
+            <h3>Create Product</h3>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Product ID</label>
+                    <input id="id" placeholder="Product ID">
+                </div>
+
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input id="name" placeholder="Product Name">
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <input id="category" placeholder="Category">
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Description</label>
+                    <textarea id="description" placeholder="Description"></textarea>
+                </div>
+
+            </div>
+
+            <button id="submitBtn" onclick="createProduct()">Create</button>
+            <button id="cancelBtn" onclick="cancelEdit()" style="display:none; background:gray">Cancel</button>
+
+            <div id="message"></div>
+
+        </div>
+
+        <!-- TABLE -->
+        <div class="card">
+
+            <h3>Product List</h3>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="table"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        let editingId = null
+
+        async function loadProducts() {
+
+            const res = await fetch("/admin/api/products")
+            const data = await res.json()
+
+            let html = ""
+
+            data.forEach(p => {
+
+                html += `
+        <tr>
+            <td>${p.product_id}</td>
+            <td>${p.product_name}</td>
+            <td>${p.category || ""}</td>
+            <td>${p.description || ""}</td>
+            <td>
+                <button onclick="editProduct(${p.product_id}, \`${p.product_name}\`, \`${p.category}\`, \`${p.description}\`)">Edit</button>
+                <button onclick="deleteProduct(${p.product_id})" style="background:red">Delete</button>
+            </td>
+        </tr>
+        `
+
+            })
+
+            document.getElementById("table").innerHTML = html
+        }
+
+        async function createProduct() {
+
+            const id = document.getElementById("id").value
+            const name = document.getElementById("name").value
+            const category = document.getElementById("category").value
+            const description = document.getElementById("description").value
+
+            const message = document.getElementById("message")
+
+            if (!id || !name) {
+                message.innerHTML = "<span class='error'>Vui lòng nhập ID và tên sản phẩm</span>"
+                return
+            }
+
+            try {
+
+                if (editingId) {
+
+                    // UPDATE
+                    await fetch("/admin/api/products/" + editingId, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name, category, description })
+                    })
+
+                    message.innerHTML = "<span class='success'>Cập nhật thành công</span>"
+                    editingId = null
+
+                } else {
+
+                    // CREATE
+                    await fetch("/admin/api/products", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id, name, category, description })
+                    })
+
+                    message.innerHTML = "<span class='success'>Tạo sản phẩm thành công</span>"
+                }
+
+                cancelEdit()
+                loadProducts()
+
+            } catch {
+
+                message.innerHTML = "<span class='error'>Có lỗi xảy ra</span>"
+
+            }
+        }
+
+        function editProduct(id, name, category, description) {
+
+            editingId = id
+
+            document.getElementById("id").value = id
+            document.getElementById("name").value = name
+            document.getElementById("category").value = category || ""
+            document.getElementById("description").value = description || ""
+
+            // đổi UI
+            document.getElementById("submitBtn").innerText = "Update"
+            document.getElementById("cancelBtn").style.display = "inline-block"
+
+            // không cho sửa ID
+            document.getElementById("id").disabled = true
+        }
+
+        async function deleteProduct(id) {
+
+            if (!confirm("Bạn có chắc muốn xóa?")) return
+
+            await fetch("/admin/api/products/" + id, {
+                method: "DELETE"
+            })
+
+            loadProducts()
+        }
+
+        function cancelEdit() {
+
+            editingId = null
+
+            document.getElementById("id").value = ""
+            document.getElementById("name").value = ""
+            document.getElementById("category").value = ""
+            document.getElementById("description").value = ""
+
+            document.getElementById("submitBtn").innerText = "Create"
+            document.getElementById("cancelBtn").style.display = "none"
+
+            document.getElementById("id").disabled = false
+        }
+
+        function clearForm() {
+
+            document.getElementById("id").value = ""
+            document.getElementById("name").value = ""
+            document.getElementById("category").value = ""
+            document.getElementById("description").value = ""
+        }
+
+        loadProducts()
+
+    </script>
+
+</body>
+
+</html>

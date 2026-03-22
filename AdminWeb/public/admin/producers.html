@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Producers</title>
+
+<link rel="stylesheet" href="layout.css">
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>Admin</h2>
+    <a href="/admin/dashboard.html">Dashboard</a>
+    <a href="/admin/products.html">Products</a>
+    <a href="/admin/producers.html">Producers</a>
+    <a href="/admin/certification_types.html">Certification Types</a>
+    <a href="/admin/certifications.html">Certifications</a>
+    <a href="/admin/batch.html">Batch</a>
+    <a href="/admin/qrcodes.html">QR Codes</a>
+    <a href="/admin/scanlogs.html">Scan Logs</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <h1>Producers</h1>
+
+    <!-- CREATE / EDIT FORM -->
+    <div class="card">
+        <h3>Create Producer</h3>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+
+            <div class="form-group">
+                <label>Producer ID</label>
+                <input id="id" placeholder="Producer ID">
+            </div>
+
+            <div class="form-group">
+                <label>Producer Name</label>
+                <input id="name" placeholder="Producer Name">
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Address</label>
+                <input id="address" placeholder="Address">
+            </div>
+
+        </div>
+
+        <br>
+
+        <button id="submitBtn" onclick="saveProducer()">Create</button>
+        <button id="cancelBtn" onclick="cancelEdit()" style="display:none; margin-left:10px; background:gray;">Cancel</button>
+
+        <p id="message"></p>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+        <h3>Producer List</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="producerTable"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+let editingId = null
+
+// LOAD DATA
+async function loadProducers() {
+
+    const res = await fetch("/admin/api/producers")
+    const data = await res.json()
+
+    let html = ""
+
+    data.forEach(p => {
+
+        html += `
+        <tr>
+            <td>${p.producer_id}</td>
+            <td>${p.producer_name}</td>
+            <td>${p.address || ""}</td>
+            <td>
+                <button style="background:#3498db"
+                    onclick="editProducer(${p.producer_id}, '${p.producer_name}', '${p.address || ""}')">
+                    Edit
+                </button>
+
+                <button style="background:red"
+                    onclick="deleteProducer(${p.producer_id})">
+                    Delete
+                </button>
+            </td>
+        </tr>
+        `
+    })
+
+    document.getElementById("producerTable").innerHTML = html
+}
+
+// CREATE + UPDATE
+async function saveProducer() {
+
+    const id = document.getElementById("id").value
+    const name = document.getElementById("name").value
+    const address = document.getElementById("address").value
+    const message = document.getElementById("message")
+
+    if (!id || !name) {
+        message.innerHTML = "<span style='color:red'>Vui lòng nhập đầy đủ</span>"
+        return
+    }
+
+    try {
+
+        if (editingId) {
+
+            await fetch("/admin/api/producers/" + editingId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, address })
+            })
+
+            message.innerHTML = "<span style='color:green'>Cập nhật thành công</span>"
+
+        } else {
+
+            await fetch("/admin/api/producers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, name, address })
+            })
+
+            message.innerHTML = "<span style='color:green'>Tạo thành công</span>"
+        }
+
+        cancelEdit()
+        loadProducers()
+
+    } catch {
+        message.innerHTML = "<span style='color:red'>Lỗi server</span>"
+    }
+}
+
+// EDIT
+function editProducer(id, name, address) {
+
+    editingId = id
+
+    document.getElementById("id").value = id
+    document.getElementById("name").value = name
+    document.getElementById("address").value = address || ""
+
+    document.getElementById("id").disabled = true
+
+    document.getElementById("submitBtn").innerText = "Update"
+    document.getElementById("cancelBtn").style.display = "inline-block"
+
+    document.getElementById("message").innerHTML = ""
+}
+
+// CANCEL
+function cancelEdit() {
+
+    editingId = null
+
+    document.getElementById("id").value = ""
+    document.getElementById("name").value = ""
+    document.getElementById("address").value = ""
+
+    document.getElementById("id").disabled = false
+
+    document.getElementById("submitBtn").innerText = "Create"
+    document.getElementById("cancelBtn").style.display = "none"
+}
+
+// DELETE
+async function deleteProducer(id) {
+
+    if (!confirm("Xóa producer này?")) return
+
+    const res = await fetch("/admin/api/producers/" + id, {
+        method: "DELETE"
+    })
+
+    const data = await res.json()
+
+    alert(data.message)
+
+    loadProducers()
+}
+
+// INIT
+loadProducers()
+
+</script>
+
+</body>
+</html>
