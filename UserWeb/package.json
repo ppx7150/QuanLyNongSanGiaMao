@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "express": "^5.2.1",
-    "msnodesqlv8": "^5.1.5",
-    "mssql": "^12.2.0",
-    "multer": "^2.1.1"
-  }
-}
