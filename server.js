@@ -130,10 +130,9 @@ app.get("/product/:code", async (req, res) => {
 
     }
     catch (err) {
-
-        res.send(err)
-
-    }
+    console.log(err)
+    res.status(500).json({ error: err.message })
+}
 
 })
 

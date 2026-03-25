@@ -159,8 +159,8 @@
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search)
-        const code = urlParams.get("code")
+        const path = window.location.pathname
+        const code = path.split("/").pop()
 
         const message = document.getElementById("message")
         const infoSection = document.getElementById("product_info")
