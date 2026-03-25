@@ -14,38 +14,6 @@ const config = {
     }
 }
 
-function generateQRcode(length = 12) {
-
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    let result = ""
-
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-
-    return result
-}
-
-async function generateUniqueQR() {
-
-    while (true) {
-
-        const code = generateQRcode()
-
-        const check = await sql.query`
-            SELECT code_value
-            FROM QR_Code
-            WHERE code_value = ${code}
-        `
-
-        if (check.recordset.length === 0) {
-            return code
-        }
-
-    }
-
-}
-
 async function connectDB() {
     try {
         await sql.connect(config)
@@ -62,29 +30,29 @@ app.get("/product/:code", async (req, res) => {
     try {
 
         const result = await sql.query`
-        SELECT 
-        p.product_name,
-        pr.producer_name,
+        SELECT
+        p.pName,
+        pr.prName,
         pr.address,
-        b.farm_location,
-        b.packing_location,
-        b.harvest_date,
-        b.packing_date,
-        b.delivery_date,
-        ct.certification_type,
-        c.certification_number,
-        c.expiry_date,
-        c.certification_image_url
-        FROM QR_Code q
-        JOIN Batch b ON q.batch_id = b.batch_id
-        JOIN Product p ON b.product_id = p.product_id
-        JOIN Producer pr ON b.producer_id = pr.producer_id
-        LEFT JOIN Certification c 
-            ON p.product_id = c.product_id 
-            AND pr.producer_id = c.producer_id
-        LEFT JOIN Certification_Type ct 
-            ON c.certification_type_id = ct.certification_type_id
-        WHERE q.code_value = ${code}
+        b.farmLoc,
+        b.packLoc,
+        b.harDate,
+        b.packDate,
+        b.deliDate,
+        ct.typeName,
+        c.certNum,
+        c.expDate,
+        c.certImg
+        FROM QRCODE q
+        JOIN BATCH b ON q.bID = b.bID
+        JOIN PRODUCT p ON b.pID = p.pID
+        JOIN PRODUCER pr ON b.prID = pr.prID
+        LEFT JOIN CERTIFICATION c
+            ON p.pID = c.pID
+            AND pr.prID = c.prID
+        LEFT JOIN CERTIFICATIONTYPE ct
+            ON c.typeID = ct.typeID
+        WHERE q.codeVal = ${code}
         `
 
         res.json(result.recordset)
@@ -106,9 +74,9 @@ app.get("/verify/:code", async (req, res) => {
         await sql.connect(config)
 
         const result = await sql.query`
-            SELECT qr_id, is_activated, FORMAT(time_activated, 'HH:mm:ss "ngày" dd/MM/yyyy') AS time_activated
-            FROM QR_Code
-            WHERE code_value = ${code}
+            SELECT qrID, isAct, FORMAT(timeAct, 'HH:mm:ss "ngày" dd/MM/yyyy') AS timeAct
+            FROM QRCODE
+            WHERE codeVal = ${code}
         `
 
         // QR không tồn tại
@@ -133,9 +101,9 @@ app.get("/verify/:code", async (req, res) => {
 
         // Lưu log scan
         await sql.query`
-            INSERT INTO Scan_Log (qr_id, scan_time, ip_address, location)
+            INSERT INTO SCANLOG (qrID, sTime, IP, sLoc)
             VALUES (
-                ${qr.qr_id},
+                ${qr.qrID},
                 ${scanTime},
                 ${ip},
                 ${location}
@@ -144,14 +112,14 @@ app.get("/verify/:code", async (req, res) => {
 
 
         // QR chưa từng quét
-        if (qr.is_activated === false) {
+        if (qr.isAct === false) {
 
             await sql.query`
-                UPDATE QR_Code
+                UPDATE QRCODE
                 SET
-                    is_activated = 1,
-                    time_activated = GETDATE()
-                WHERE qr_id = ${qr.qr_id}
+                    isAct = 1,
+                    timeAct = GETDATE()
+                WHERE qrID = ${qr.qrID}
             `
 
             return res.json({
@@ -163,7 +131,7 @@ app.get("/verify/:code", async (req, res) => {
         // QR đã quét
         return res.json({
             status: "scanned",
-            first_scan: qr.time_activated
+            first_scan: qr.timeAct
         })
 
     }
@@ -176,38 +144,6 @@ app.get("/verify/:code", async (req, res) => {
 
 })
 
-app.get("/generateQR/:batch_id", async (req, res) => {
-
-    const batch_id = req.params.batch_id
-
-    try {
-
-        const code = await generateUniqueQR()
-
-        const result = await sql.query`
-        INSERT INTO QR_Code (qr_id, batch_id, code_value, is_activated)
-        VALUES (
-            (SELECT ISNULL(MAX(qr_id),0)+1 FROM QR_Code),
-            ${batch_id},
-            ${code},
-            0
-        )
-        `
-
-        res.json({
-            message: "QR code created",
-            code: code,
-            link: "http://localhost:3000/scan/" + code
-        })
-
-    } catch (err) {
-
-        console.log(err)
-        res.status(500).send(err)
-
-    }
-
-})
 
 app.get("/scan/:code", (req, res) => {
 

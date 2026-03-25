@@ -97,7 +97,7 @@
             let html = ""
 
             data.forEach(b => {
-                html += `<option value="${b.batch_id}">Batch ${b.batch_id}</option>`
+                html += `<option value="${b.bID}">Batch ${b.bID}</option>`
             })
 
             document.getElementById("batch").innerHTML = html
@@ -126,10 +126,10 @@
             }
 
             document.getElementById("batchInfo").innerHTML = `
-        <b>Sản phẩm:</b> ${data.product_name}<br>
-        <b>Nhà sản xuất:</b> ${data.producer_name}<br>
-        <b>Nơi trồng:</b> ${data.farm_location}<br>
-        <b>Đóng gói:</b> ${data.packing_location}
+        <b>Sản phẩm:</b> ${data.pName}<br>
+        <b>Nhà sản xuất:</b> ${data.prName}<br>
+        <b>Nơi trồng:</b> ${data.farmLoc}<br>
+        <b>Đóng gói:</b> ${data.packLoc}
     `
         }
 
@@ -185,18 +185,18 @@
 
             data.forEach(q => {
 
-                let status = q.is_activated ? "Đã quét" : "Chưa quét"
+                let status = q.isAct ? "Đã quét" : "Chưa quét"
 
-                let time = q.time_activated
-                    ? new Date(q.time_activated).toLocaleString("vi-VN", {
+                let time = q.timeAct
+                    ? new Date(q.timeAct).toLocaleString("vi-VN", {
                         timeZone: "UTC"
                     })
                     : ""
 
                 html += `
             <tr>
-                <td>${q.qr_id}</td>
-                <td>${q.code_value}</td>
+                <td>${q.qrID}</td>
+                <td>${q.codeVal}</td>
                 <td>${status}</td>
                 <td>${time}</td>
             </tr>

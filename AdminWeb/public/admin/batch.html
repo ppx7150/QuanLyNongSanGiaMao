@@ -143,15 +143,15 @@
 
             let pHtml = ""
             products.forEach(p => {
-                pHtml += `<option value="${p.product_id}">
-    [${p.product_id}] ${p.product_name}
+                pHtml += `<option value="${p.pID}">
+    [${p.pID}] ${p.pName}
 </option>`
             })
 
             let prHtml = ""
             producers.forEach(p => {
-                prHtml += `<option value="${p.producer_id}">
-    [${p.producer_id}] ${p.producer_name}
+                prHtml += `<option value="${p.prID}">
+    [${p.prID}] ${p.prName}
 </option>`
             })
 
@@ -171,17 +171,17 @@
 
                 html += `
 <tr>
-<td>${b.batch_id}</td>
-<td>${b.product_name}</td>
-<td>${b.producer_name}</td>
-<td>${b.farm_location}</td>
-<td>${b.packing_location}</td>
-<td>${formatDate(b.harvest_date)}</td>
-<td>${formatDate(b.packing_date)}</td>
-<td>${formatDate(b.delivery_date)}</td>
+<td>${b.bID}</td>
+<td>${b.pName}</td>
+<td>${b.prName}</td>
+<td>${b.farmLoc}</td>
+<td>${b.packLoc}</td>
+<td>${formatDate(b.harDate)}</td>
+<td>${formatDate(b.packDate)}</td>
+<td>${formatDate(b.deliDate)}</td>
 <td>
-<button onclick="editBatch(${b.batch_id}, ${b.product_id}, ${b.producer_id}, \`${b.farm_location}\`, \`${b.packing_location}\`, '${b.harvest_date}', '${b.packing_date}', '${b.delivery_date}')">Edit</button>
-<button onclick="deleteBatch(${b.batch_id})" style="background:red">Delete</button>
+<button onclick="editBatch(${b.bID}, ${b.pID}, ${b.prID}, \`${b.farmLoc}\`, \`${b.packLoc}\`, '${b.harDate}', '${b.packDate}', '${b.deliDate}')">Edit</button>
+<button onclick="deleteBatch(${b.bID})" style="background:red">Delete</button>
 </td>
 </tr>
 `

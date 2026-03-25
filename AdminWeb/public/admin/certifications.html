@@ -9,6 +9,7 @@
 
 <body>
 
+    <!-- SIDEBAR -->
     <div class="sidebar">
         <h2>Admin</h2>
         <a href="dashboard.html">Dashboard</a>
@@ -21,10 +22,12 @@
         <a href="scanlogs.html">Scan Logs</a>
     </div>
 
+    <!-- MAIN -->
     <div class="main">
 
         <h1>Certifications</h1>
 
+        <!-- FORM -->
         <div class="card">
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
@@ -66,15 +69,19 @@
 
                 <div class="form-group">
                     <label>Image URL</label>
-                    <input id="image">
+                    <input id="image" placeholder="/images/vietgap.jpg">
                 </div>
 
             </div>
 
-            <button onclick="create()">Create</button>
+            <br>
+
+            <button id="submitBtn" onclick="create()">Create</button>
+            <button id="cancelBtn" onclick="cancelEdit()" style="display:none; background:gray">Cancel</button>
 
         </div>
 
+        <!-- TABLE -->
         <div class="card">
 
             <table>
@@ -85,7 +92,9 @@
                         <th>Product</th>
                         <th>Producer</th>
                         <th>Number</th>
+                        <th>Issue</th>
                         <th>Expiry</th>
+                        <th>Image URL</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -99,6 +108,9 @@
 
     <script>
 
+        let editingId = null
+
+        // LOAD DROPDOWN
         async function loadDropdown() {
 
             const types = await fetch("/admin/api/cert-types").then(r => r.json())
@@ -106,60 +118,134 @@
             const producers = await fetch("/admin/api/producers").then(r => r.json())
 
             document.getElementById("type").innerHTML =
-                types.map(t => `<option value="${t.certification_type_id}">${t.certification_type}</option>`).join("")
+                types.map(t => `<option value="${t.typeID}">${t.typeName}</option>`).join("")
 
             document.getElementById("product").innerHTML =
-                products.map(p => `<option value="${p.product_id}">${p.product_name}</option>`).join("")
+                products.map(p => `<option value="${p.pID}">${p.pName}</option>`).join("")
 
             document.getElementById("producer").innerHTML =
-                producers.map(p => `<option value="${p.producer_id}">${p.producer_name}</option>`).join("")
+                producers.map(p => `<option value="${p.prID}">${p.prName}</option>`).join("")
         }
 
+        // LOAD TABLE
         async function load() {
 
             const data = await fetch("/admin/api/certifications").then(r => r.json())
 
-            document.getElementById("table").innerHTML =
-                data.map(c => `
-        <tr>
-            <td>${c.certification_id}</td>
-            <td>${c.certification_type}</td>
-            <td>${c.product_name}</td>
-            <td>${c.producer_name}</td>
-            <td>${c.certification_number}</td>
-            <td>${c.expiry_date?.split("T")[0]}</td>
-            <td>
-                <button onclick="del(${c.certification_id})" style="background:red">Delete</button>
-            </td>
-        </tr>
-        `).join("")
+            let html = ""
+
+            data.forEach(c => {
+
+                html += `
+<tr>
+    <td>${c.certID}</td>
+    <td>${c.typeName}</td>
+    <td>${c.pName}</td>
+    <td>${c.prName}</td>
+    <td>${c.certNum}</td>
+    <td>${c.isuDate ? c.isuDate.split("T")[0] : ""}</td>
+    <td>${c.expDate ? c.expDate.split("T")[0] : ""}</td>
+
+    <td>${c.certImg || ""}</td>
+
+    <td>
+        <button onclick="editCert(
+            ${c.certID},
+            ${c.typeID},
+            ${c.pID},
+            ${c.prID},
+            '${c.certNum}',
+            '${c.isuDate}',
+            '${c.expDate}',
+            '${c.certImg || ""}'
+        )">Edit</button>
+
+        <button onclick="del(${c.certID})" style="background:red">Delete</button>
+    </td>
+</tr>
+`
+            })
+
+            document.getElementById("table").innerHTML = html
         }
 
+        // CREATE + UPDATE
         async function create() {
 
             const body = {
-                id: id.value,
-                type: type.value,
-                product: product.value,
-                producer: producer.value,
-                number: number.value,
-                issue: issue.value,
-                expiry: expiry.value,
-                image: image.value
+                id: document.getElementById("id").value,
+                type: document.getElementById("type").value,
+                product: document.getElementById("product").value,
+                producer: document.getElementById("producer").value,
+                number: document.getElementById("number").value,
+                issue: document.getElementById("issue").value,
+                expiry: document.getElementById("expiry").value,
+                image: document.getElementById("image").value
             }
 
-            await fetch("/admin/api/certifications", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            })
+            if (editingId) {
+
+                await fetch("/admin/api/certifications/" + editingId, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                })
+
+                cancelEdit()
+
+            } else {
+
+                await fetch("/admin/api/certifications", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                })
+            }
 
             load()
         }
 
+        // DELETE
         async function del(id) {
             await fetch("/admin/api/certifications/" + id, { method: "DELETE" })
             load()
+        }
+
+        // EDIT
+        function editCert(id, type, product, producer, number, issue, expiry, image) {
+
+            editingId = id
+
+            document.getElementById("id").value = id
+            document.getElementById("type").value = type
+            document.getElementById("product").value = product
+            document.getElementById("producer").value = producer
+            document.getElementById("number").value = number
+            document.getElementById("issue").value = issue ? issue.split("T")[0] : ""
+            document.getElementById("expiry").value = expiry ? expiry.split("T")[0] : ""
+            document.getElementById("image").value = image
+
+            document.getElementById("id").disabled = true
+
+            document.getElementById("submitBtn").innerText = "Update"
+            document.getElementById("cancelBtn").style.display = "inline-block"
+        }
+
+        // CANCEL
+        function cancelEdit() {
+
+            editingId = null
+
+            document.getElementById("id").value = ""
+            document.getElementById("number").value = ""
+            document.getElementById("issue").value = ""
+            document.getElementById("expiry").value = ""
+            document.getElementById("image").value = ""
+
+            document.getElementById("id").disabled = false
+
+            document.getElementById("submitBtn").innerText = "Create"
+            document.getElementById("cancelBtn").style.display = "none"
         }
 
         loadDropdown()

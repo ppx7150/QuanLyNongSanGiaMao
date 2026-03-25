@@ -209,16 +209,16 @@
                 const p = data[0] // chỉ lấy 1 để hiển thị info chung
 
                 // info chung
-                document.getElementById("product").innerText = p.product_name
-                document.getElementById("producer").innerText = p.producer_name
+                document.getElementById("product").innerText = p.pName
+                document.getElementById("producer").innerText = p.prName
                 document.getElementById("address").innerText = p.address
 
-                document.getElementById("farm").innerText = p.farm_location
-                document.getElementById("packing_location").innerText = p.packing_location
+                document.getElementById("farm").innerText = p.farmLoc
+                document.getElementById("packing_location").innerText = p.packLoc
 
-                document.getElementById("harvest").innerText = new Date(p.harvest_date).toLocaleDateString()
-                document.getElementById("packing").innerText = new Date(p.packing_date).toLocaleDateString()
-                document.getElementById("delivery").innerText = new Date(p.delivery_date).toLocaleDateString()
+                document.getElementById("harvest").innerText = new Date(p.harDate).toLocaleDateString()
+                document.getElementById("packing").innerText = new Date(p.packDate).toLocaleDateString()
+                document.getElementById("delivery").innerText = new Date(p.deliDate).toLocaleDateString()
 
                 // render nhiều chứng nhận
                 const certContainer = document.getElementById("cert_list")
@@ -227,25 +227,25 @@
                 data.forEach(cert => {
 
                     // nếu không có cert (LEFT JOIN null)
-                    if (!cert.certification_type) return
+                    if (!cert.typeName) return
 
                     certContainer.innerHTML += `
     <div class="cert-box">
 
         <div class="info">
-            <span class="label">Tiêu chuẩn:</span> ${cert.certification_type}
+            <span class="label">Tiêu chuẩn:</span> ${cert.typeName}
         </div>
 
         <div class="info">
-            <span class="label">Mã chứng nhận:</span> ${cert.certification_number}
+            <span class="label">Mã chứng nhận:</span> ${cert.certNum}
         </div>
 
         <div class="info">
-            <span class="label">Hiệu lực đến:</span> ${new Date(cert.expiry_date).toLocaleDateString()}
+            <span class="label">Hiệu lực đến:</span> ${new Date(cert.expDate).toLocaleDateString()}
         </div>
 
-        ${cert.certification_image_url
-                            ? `<img src="${cert.certification_image_url}" class="cert-img">`
+        ${cert.certImg
+                            ? `<img src="${cert.certImg}" class="cert-img">`
                             : ""
                         }
 

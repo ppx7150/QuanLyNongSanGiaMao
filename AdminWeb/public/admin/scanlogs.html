@@ -65,14 +65,14 @@
 
                 html += `
         <tr>
-            <td>${s.scan_id}</td>
-            <td>${s.qr_id}</td>
-            <td>${formatDate(s.scan_time)}</td>
-            <td>${s.ip_address || ""}</td>
-            <td>${s.location || ""}</td>
+            <td>${s.sID}</td>
+            <td>${s.qrID}</td>
+            <td>${formatDate(s.sTime)}</td>
+            <td>${s.IP || ""}</td>
+            <td>${s.sLoc || ""}</td>
             <td>
                 <button style="background:red"
-                    onclick="deleteLog(${s.scan_id})">
+                    onclick="deleteLog(${s.sID})">
                     Delete
                 </button>
             </td>

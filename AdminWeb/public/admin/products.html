@@ -145,13 +145,13 @@
 
                 html += `
         <tr>
-            <td>${p.product_id}</td>
-            <td>${p.product_name}</td>
+            <td>${p.pID}</td>
+            <td>${p.pName}</td>
             <td>${p.category || ""}</td>
-            <td>${p.description || ""}</td>
+            <td>${p.des || ""}</td>
             <td>
-                <button onclick="editProduct(${p.product_id}, \`${p.product_name}\`, \`${p.category}\`, \`${p.description}\`)">Edit</button>
-                <button onclick="deleteProduct(${p.product_id})" style="background:red">Delete</button>
+                <button onclick="editProduct(${p.pID}, \`${p.pName}\`, \`${p.category}\`, \`${p.des}\`)">Edit</button>
+                <button onclick="deleteProduct(${p.pID})" style="background:red">Delete</button>
             </td>
         </tr>
         `

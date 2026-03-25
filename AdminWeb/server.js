@@ -65,9 +65,9 @@ async function generateUniqueQR() {
         const code = generateQRcode()
 
         const check = await sql.query`
-        SELECT code_value
-        FROM QR_Code
-        WHERE code_value = ${code}
+        SELECT codeVal
+        FROM QRCODE
+        WHERE codeVal = ${code}
         `
 
         if (check.recordset.length === 0) {
@@ -93,32 +93,32 @@ app.get("/product/:code", async (req, res) => {
         const result = await sql.query`
 
         SELECT 
-        p.product_name,
-        pr.producer_name,
+        p.pName,
+        pr.prName,
         pr.address,
-        b.farm_location,
-        b.packing_location,
-        b.harvest_date,
-        b.packing_date,
-        b.delivery_date,
-        ct.certification_type,
-        c.certification_number,
-        c.expiry_date
-        c.certification_image_url
+        b.farmLoc,
+        b.packLoc,
+        b.harDate,
+        b.packDate,
+        b.deliDate,
+        ct.typeName,
+        c.certNum,
+        c.expDate,
+        c.certImg
 
-        FROM QR_Code q
-        JOIN Batch b ON q.batch_id = b.batch_id
-        JOIN Product p ON b.product_id = p.product_id
-        JOIN Producer pr ON b.producer_id = pr.producer_id
+        FROM QRCODE q
+        JOIN BATCH b ON q.bID = b.bID
+        JOIN PRODUCT p ON b.pID = p.pID
+        JOIN PRODUCER pr ON b.prID = pr.prID
 
-        LEFT JOIN Certification c 
-        ON p.product_id = c.product_id 
-        AND pr.producer_id = c.producer_id
+        LEFT JOIN CERTIFICATION c 
+        ON p.pID = c.pID 
+        AND pr.prID = c.prID
 
-        LEFT JOIN Certification_Type ct 
-        ON c.certification_type_id = ct.certification_type_id
+        LEFT JOIN CERTIFICATIONTYPE ct 
+        ON c.certID = ct.certID
 
-        WHERE q.code_value = ${code}
+        WHERE q.codeVal = ${code}
 
         `
 
@@ -146,12 +146,12 @@ app.get("/verify/:code", async (req, res) => {
         const result = await sql.query`
 
         SELECT 
-        qr_id,
-        is_activated,
-        FORMAT(time_activated,'HH:mm:ss dd/MM/yyyy') AS time_activated
+        qrID,
+        isAct,
+        FORMAT(timeAct,'HH:mm:ss dd/MM/yyyy') AS timeAct
 
-        FROM QR_Code
-        WHERE code_value = ${code}
+        FROM QRCODE
+        WHERE codeVal = ${code}
 
         `
 
@@ -171,13 +171,13 @@ app.get("/verify/:code", async (req, res) => {
 
         await sql.query`
 
-        INSERT INTO Scan_Log (scan_id, qr_id, scan_time, ip_address, location)
+        INSERT INTO SCANLOG (sID, qrID, sTime, IP, sLoc)
 
         VALUES(
 
-        (SELECT ISNULL(MAX(scan_id),0)+1 FROM Scan_Log),
+        (SELECT ISNULL(MAX(sID),0)+1 FROM SCANLOG),
 
-        ${qr.qr_id},
+        ${qr.qrID},
 
         ${scanTime},
 
@@ -189,17 +189,17 @@ app.get("/verify/:code", async (req, res) => {
 
         `
 
-        if (qr.is_activated === false) {
+        if (qr.isAct === false) {
 
             await sql.query`
 
-            UPDATE QR_Code
+            UPDATE QRCODE
 
             SET
-            is_activated = 1,
-            time_activated = GETDATE()
+            isAct = 1,
+            timeAct = GETDATE()
 
-            WHERE qr_id = ${qr.qr_id}
+            WHERE qrID = ${qr.qrID}
 
             `
 
@@ -241,11 +241,11 @@ app.get("/scan/:code", (req, res) => {
 app.get("/admin/dashboard", async (req, res) => {
 
     const totalQR = await sql.query`
-    SELECT COUNT(*) AS total FROM QR_Code
+    SELECT COUNT(*) AS total FROM QRCODE
     `
 
     const scans = await sql.query`
-    SELECT COUNT(*) AS scans FROM Scan_Log
+    SELECT COUNT(*) AS scans FROM SCANLOG
     `
 
     res.json({
@@ -264,7 +264,7 @@ app.get("/admin/dashboard", async (req, res) => {
 app.get("/admin/products", async (req, res) => {
 
     const result = await sql.query`
-    SELECT * FROM Product
+    SELECT * FROM PRODUCT
     `
 
     res.json(result.recordset)
@@ -280,8 +280,8 @@ app.get("/admin/scanlogs", async (req, res) => {
     const result = await sql.query`
 
     SELECT *
-    FROM Scan_Log
-    ORDER BY scan_time DESC
+    FROM SCANLOG
+    ORDER BY sTime DESC
 
     `
 
@@ -300,7 +300,7 @@ app.post("/admin/api/products", express.json(), async (req, res) => {
     try {
 
         await sql.query`
-        INSERT INTO Product(product_id, product_name, category, description)
+        INSERT INTO PRODUCT(pID, pName, category, des)
         VALUES(${id}, ${name}, ${category}, ${description})
         `
 
@@ -317,8 +317,8 @@ app.post("/admin/api/products", express.json(), async (req, res) => {
 app.get("/admin/api/products", async (req, res) => {
 
     const result = await sql.query`
-    SELECT * FROM Product
-    ORDER BY product_id
+    SELECT * FROM PRODUCT
+    ORDER BY pID
     `
 
     res.json(result.recordset)
@@ -332,7 +332,7 @@ app.delete("/admin/api/products/:id", async (req, res) => {
     try {
 
         await sql.query`
-        DELETE FROM Product WHERE product_id = ${id}
+        DELETE FROM PRODUCT WHERE pID = ${id}
         `
 
         res.json({ message: "Deleted" })
@@ -345,13 +345,8 @@ app.delete("/admin/api/products/:id", async (req, res) => {
 
 })
 
-app.get("/admin/api/products", async (req, res) => {
-    const result = await sql.query`SELECT * FROM Product`
-    res.json(result.recordset)
-})
-
 app.get("/admin/api/producers", async (req, res) => {
-    const result = await sql.query`SELECT * FROM Producer`
+    const result = await sql.query`SELECT * FROM PRODUCER`
     res.json(result.recordset)
 })
 
@@ -363,12 +358,12 @@ app.put("/admin/api/products/:id", async (req, res) => {
     try {
 
         await sql.query`
-        UPDATE Product
+        UPDATE PRODUCT
         SET 
-            product_name = ${name},
+            pName = ${name},
             category = ${category},
-            description = ${description}
-        WHERE product_id = ${id}
+            des = ${description}
+        WHERE pID = ${id}
         `
 
         res.json({ message: "Updated" })
@@ -384,7 +379,7 @@ app.get("/admin/api/batch/check/:id", async (req, res) => {
     const id = req.params.id
 
     const result = await sql.query`
-    SELECT * FROM Batch WHERE batch_id = ${id}
+    SELECT * FROM BATCH WHERE bID = ${id}
     `
 
     if (result.recordset.length > 0) {
@@ -411,7 +406,7 @@ app.post("/admin/api/batch", express.json(), async (req, res) => {
 
         // check trùng
         const check = await sql.query`
-        SELECT * FROM Batch WHERE batch_id = ${batch_id}
+        SELECT * FROM BATCH WHERE bID = ${batch_id}
         `
 
         if (check.recordset.length > 0) {
@@ -419,15 +414,15 @@ app.post("/admin/api/batch", express.json(), async (req, res) => {
         }
 
         await sql.query`
-        INSERT INTO Batch(
-            batch_id,
-            product_id,
-            producer_id,
-            farm_location,
-            packing_location,
-            harvest_date,
-            packing_date,
-            delivery_date
+        INSERT INTO BATCH(
+            bID,
+            pID,
+            prID,
+            farmLoc,
+            packLoc,
+            harDate,
+            packDate,
+            deliDate
         )
         VALUES(
             ${batch_id},
@@ -456,7 +451,7 @@ app.delete("/admin/api/batch/:id", async (req, res) => {
     try {
 
         await sql.query`
-        DELETE FROM Batch WHERE batch_id = ${id}
+        DELETE FROM BATCH WHERE bID = ${id}
         `
 
         res.json({ message: "Deleted" })
@@ -486,7 +481,7 @@ app.put("/admin/api/batch/:id", express.json(), async (req, res) => {
 
         // check nếu đổi ID và bị trùng
         const check = await sql.query`
-        SELECT * FROM Batch WHERE batch_id = ${batch_id} AND batch_id <> ${oldId}
+        SELECT * FROM BATCH WHERE bID = ${batch_id} AND bID <> ${oldId}
         `
 
         if (check.recordset.length > 0) {
@@ -494,17 +489,17 @@ app.put("/admin/api/batch/:id", express.json(), async (req, res) => {
         }
 
         await sql.query`
-        UPDATE Batch
+        UPDATE BATCH
         SET
-            batch_id = ${batch_id},
-            product_id = ${product_id},
-            producer_id = ${producer_id},
-            farm_location = ${farm_location},
-            packing_location = ${packing_location},
-            harvest_date = ${harvest_date},
-            packing_date = ${packing_date},
-            delivery_date = ${delivery_date}
-        WHERE batch_id = ${oldId}
+            bID = ${batch_id},
+            pID = ${product_id},
+            prID = ${producer_id},
+            farmLoc = ${farm_location},
+            packLoc = ${packing_location},
+            harDate = ${harvest_date},
+            packDate = ${packing_date},
+            deliDate = ${delivery_date}
+        WHERE bID = ${oldId}
         `
 
         res.json({ message: "Updated" })
@@ -519,20 +514,20 @@ app.get("/admin/api/batch", async (req, res) => {
 
     const result = await sql.query`
     SELECT 
-        b.batch_id,
-        b.product_id,
-        b.producer_id,
-        p.product_name,
-        pr.producer_name,
-        b.farm_location,
-        b.packing_location,
-        b.harvest_date,
-        b.packing_date,
-        b.delivery_date
-    FROM Batch b
-    JOIN Product p ON b.product_id = p.product_id
-    JOIN Producer pr ON b.producer_id = pr.producer_id
-    ORDER BY b.batch_id DESC
+        b.bID,
+        b.pID,
+        b.prID,
+        p.pName,
+        pr.prName,
+        b.farmLoc,
+        b.packLoc,
+        b.harDate,
+        b.packDate,
+        b.deliDate
+    FROM BATCH b
+    JOIN PRODUCT p ON b.pID = p.pID
+    JOIN PRODUCER pr ON b.prID = pr.prID
+    ORDER BY b.bID DESC
     `
 
     res.json(result.recordset)
@@ -556,15 +551,15 @@ app.get("/admin/api/batch/:id", async (req, res) => {
 
     const result = await sql.query`
     SELECT 
-        b.batch_id,
-        p.product_name,
-        pr.producer_name,
-        b.farm_location,
-        b.packing_location
-    FROM Batch b
-    JOIN Product p ON b.product_id = p.product_id
-    JOIN Producer pr ON b.producer_id = pr.producer_id
-    WHERE b.batch_id = ${id}
+        b.bID,
+        p.pName,
+        pr.prName,
+        b.farmLoc,
+        b.packLoc
+    FROM BATCH b
+    JOIN PRODUCT p ON b.pID = p.pID
+    JOIN PRODUCER pr ON b.prID = pr.prID
+    WHERE b.bID = ${id}
     `
 
     res.json(result.recordset[0] || null)
@@ -594,7 +589,7 @@ app.post("/admin/api/qrcode/generate", express.json(), async (req, res) => {
                 code = generateQRValue()
 
                 const check = await sql.query`
-                SELECT * FROM QR_Code WHERE code_value = ${code}
+                SELECT * FROM QRCODE WHERE codeVal = ${code}
                 `
 
                 if (check.recordset.length === 0) {
@@ -603,7 +598,7 @@ app.post("/admin/api/qrcode/generate", express.json(), async (req, res) => {
             }
 
             await sql.query`
-            INSERT INTO QR_Code (code_value, batch_id, is_activated)
+            INSERT INTO QRCODE (codeVal, bID, isAct)
             VALUES (${code}, ${batch_id}, 0)
             `
 
@@ -630,13 +625,13 @@ app.get("/admin/api/qrcode/:batch_id", async (req, res) => {
 
         const result = await sql.query`
         SELECT 
-            qr_id,
-            code_value,
-            is_activated,
-            time_activated
-        FROM QR_Code
-        WHERE batch_id = ${batch_id}
-        ORDER BY qr_id DESC
+            qrID,
+            codeVal,
+            isAct,
+            timeAct
+        FROM QRCODE
+        WHERE bID = ${batch_id}
+        ORDER BY qrID DESC
         `
 
         res.json(result.recordset)
@@ -654,7 +649,7 @@ app.post("/admin/api/producers", async (req, res) => {
 
     try {
         await sql.query`
-        INSERT INTO Producer(producer_id, producer_name, address)
+        INSERT INTO PRODUCER(prID, prName, address)
         VALUES(${id}, ${name}, ${address})
         `
 
@@ -673,11 +668,11 @@ app.put("/admin/api/producers/:id", async (req, res) => {
     try {
 
         await sql.query`
-        UPDATE Producer
+        UPDATE PRODUCER
         SET 
-            producer_name = ${name},
+            prName = ${name},
             address = ${address}
-        WHERE producer_id = ${id}
+        WHERE prID = ${id}
         `
 
         res.json({ message: "Updated" })
@@ -694,11 +689,11 @@ app.delete("/admin/api/producers/:id", async (req, res) => {
     try {
 
         const check = await sql.query`
-        SELECT * FROM Batch WHERE producer_id = ${id}
+        SELECT * FROM BATCH WHERE prID = ${id}
         `
 
         await sql.query`
-        DELETE FROM Producer WHERE producer_id = ${id}
+        DELETE FROM PRODUCER WHERE prID = ${id}
         `
 
         res.json({ message: "Deleted" })
@@ -713,7 +708,7 @@ app.delete("/admin/api/scanlogs/:id", async (req, res) => {
     const id = req.params.id
 
     await sql.query`
-    DELETE FROM Scan_Log WHERE scan_id = ${id}
+    DELETE FROM SCANLOG WHERE sID = ${id}
     `
 
     res.json({ message: "Deleted" })
@@ -721,7 +716,7 @@ app.delete("/admin/api/scanlogs/:id", async (req, res) => {
 
 // GET
 app.get("/admin/api/cert-types", async (req, res) => {
-    const result = await sql.query`SELECT * FROM Certification_Type`
+    const result = await sql.query`SELECT * FROM CERTIFICATIONTYPE`
     res.json(result.recordset)
 })
 
@@ -730,7 +725,7 @@ app.post("/admin/api/cert-types", async (req, res) => {
     const { id, name } = req.body
 
     await sql.query`
-    INSERT INTO Certification_Type VALUES (${id}, ${name})
+    INSERT INTO CERTIFICATIONTYPE VALUES (${id}, ${name})
     `
 
     res.json({ message: "Created" })
@@ -742,10 +737,24 @@ app.delete("/admin/api/cert-types/:id", async (req, res) => {
     const id = req.params.id
 
     await sql.query`
-    DELETE FROM Certification_Type WHERE certification_type_id = ${id}
+    DELETE FROM CERTIFICATIONTYPE WHERE typeID = ${id}
     `
 
     res.json({ message: "Deleted" })
+})
+
+app.put("/admin/api/cert-types/:id", async (req, res) => {
+
+    const id = req.params.id
+    const { name } = req.body
+
+    await sql.query`
+        UPDATE CERTIFICATIONTYPE
+        SET typeName = ${name}
+        WHERE typeID = ${id}
+    `
+
+    res.json({ message: "Updated" })
 })
 
 // GET
@@ -753,14 +762,14 @@ app.get("/admin/api/certifications", async (req, res) => {
 
     const result = await sql.query`
     SELECT c.*, 
-           ct.certification_type,
-           p.product_name,
-           pr.producer_name
+           ct.typeName,
+           p.pName,
+           pr.prName
     FROM Certification c
-    JOIN Certification_Type ct ON c.certification_type_id = ct.certification_type_id
-    JOIN Product p ON c.product_id = p.product_id
-    JOIN Producer pr ON c.producer_id = pr.producer_id
-    ORDER BY c.certification_id DESC
+    JOIN CERTIFICATIONTYPE ct ON c.typeID = ct.typeID
+    JOIN Product p ON c.pID = p.pID
+    JOIN PRODUCER pr ON c.prID = pr.prID
+    ORDER BY c.certID DESC
     `
 
     res.json(result.recordset)
@@ -775,7 +784,7 @@ app.post("/admin/api/certifications", async (req, res) => {
     } = req.body
 
     await sql.query`
-    INSERT INTO Certification VALUES(
+    INSERT INTO CERTIFICATION VALUES(
         ${id}, ${type}, ${product}, ${producer},
         ${number}, ${issue}, ${expiry}, ${image}
     )
@@ -790,10 +799,35 @@ app.delete("/admin/api/certifications/:id", async (req, res) => {
     const id = req.params.id
 
     await sql.query`
-    DELETE FROM Certification WHERE certification_id = ${id}
+    DELETE FROM CERTIFICATION WHERE certID = ${id}
     `
 
     res.json({ message: "Deleted" })
+})
+
+app.put("/admin/api/certifications/:id", async (req, res) => {
+
+    const id = req.params.id
+
+    const {
+        type, product, producer,
+        number, issue, expiry, image
+    } = req.body
+
+    await sql.query`
+        UPDATE CERTIFICATION
+        SET 
+            typeID = ${type},
+            pID = ${product},
+            prID = ${producer},
+            certNum = ${number},
+            isuDate = ${issue},
+            expDate = ${expiry},
+            certImg = ${image}
+        WHERE certID = ${id}
+    `
+
+    res.json({ message: "Updated" })
 })
 
 connectDB()

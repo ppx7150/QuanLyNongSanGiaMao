@@ -95,17 +95,17 @@ async function loadProducers() {
 
         html += `
         <tr>
-            <td>${p.producer_id}</td>
-            <td>${p.producer_name}</td>
+            <td>${p.prID}</td>
+            <td>${p.prName}</td>
             <td>${p.address || ""}</td>
             <td>
                 <button style="background:#3498db"
-                    onclick="editProducer(${p.producer_id}, '${p.producer_name}', '${p.address || ""}')">
+                    onclick="editProducer(${p.prID}, '${p.prName}', '${p.address || ""}')">
                     Edit
                 </button>
 
                 <button style="background:red"
-                    onclick="deleteProducer(${p.producer_id})">
+                    onclick="deleteProducer(${p.prID})">
                     Delete
                 </button>
             </td>
