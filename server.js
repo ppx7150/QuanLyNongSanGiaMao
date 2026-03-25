@@ -175,7 +175,7 @@ app.get("/verify/:code", async (req, res) => {
         const request = new sql.Request()
 
         request.input("qrID", sql.Int, qr.qrID)
-        request.input("time", sql.DateTime, new Date())
+        request.input("time", sql.DateTime, new Date(Date.now() + 7 * 60 * 60 * 1000))
         request.input("ip", sql.NVarChar, ip)
         request.input("loc", sql.NVarChar, location)
 
@@ -186,16 +186,13 @@ app.get("/verify/:code", async (req, res) => {
 
         if (qr.isAct == 0) {
 
+
             await sql.query`
-
             UPDATE QRCODE
-
             SET
-            isAct = 1,
-            timeAct = GETDATE()
-
+                isAct = 1,
+                timeAct = DATEADD(HOUR, 7, GETUTCDATE())
             WHERE qrID = ${qr.qrID}
-
             `
 
             return res.json({
