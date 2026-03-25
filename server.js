@@ -174,11 +174,9 @@ app.get("/verify/:code", async (req, res) => {
 
         await sql.query`
 
-        INSERT INTO SCANLOG (sID, qrID, sTime, IP, sLoc)
+        INSERT INTO SCANLOG (qrID, sTime, IP, sLoc)
 
         VALUES(
-
-        (SELECT ISNULL(MAX(sID),0)+1 FROM SCANLOG),
 
         ${qr.qrID},
 
