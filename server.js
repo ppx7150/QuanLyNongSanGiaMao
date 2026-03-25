@@ -234,7 +234,7 @@ app.get("/verify/:code", async (req, res) => {
 
 app.get("/scan/:code", (req, res) => {
 
-    res.sendFile(__dirname + "/public/product.html")
+    res.sendFile(__dirname + "/public/user/product.html")
 
 })
 
