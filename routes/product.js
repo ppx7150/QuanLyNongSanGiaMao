@@ -9,16 +9,16 @@ router.get("/:code", async (req, res) => {
     try {
 
         const result = await sql.query`
-        SELECT p.product_name,
-               pr.producer_name,
-               b.farm_location,
-               b.harvest_date,
-               b.packing_date
-        FROM QR_Code q
-        JOIN Batch b ON q.batch_id = b.batch_id
-        JOIN Product p ON b.product_id = p.product_id
-        JOIN Producer pr ON b.producer_id = pr.producer_id
-        WHERE q.code_value = ${code}
+        SELECT p.pName,
+               pr.prName,
+               b.farmLoc,
+               b.harDate,
+               b.packDate
+        FROM QRCODE q
+        JOIN BATCH b ON q.bID = b.bID
+        JOIN PRODUCT p ON b.pID = p.pID
+        JOIN PRODUCER pr ON b.prID = pr.prID
+        WHERE q.codeVal = ${code}
         `;
 
         res.json(result.recordset[0]);
