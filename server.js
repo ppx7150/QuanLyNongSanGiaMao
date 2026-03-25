@@ -120,7 +120,7 @@ app.get("/product/:code", async (req, res) => {
         AND pr.prID = c.prID
 
         LEFT JOIN CERTIFICATIONTYPE ct 
-        ON c.certID = ct.certID
+        ON c.typeID = ct.typeID
 
         WHERE q.codeVal = ${code}
 
