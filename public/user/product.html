@@ -159,103 +159,122 @@
     </div>
 
     <script>
-        const path = window.location.pathname
-        const code = path.split("/").pop()
 
-        const message = document.getElementById("message")
-        const infoSection = document.getElementById("product_info")
+    // =========================
+    // LẤY CODE TỪ URL (?code=...)
+    // =========================
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get("code")
 
-        // =======================
-        // VERIFY QR
-        // =======================
-        fetch("https://quanlynongsangiamao-backend.onrender.com/verify/" + code)
-            .then(res => res.json())
-            .then(data => {
+    const message = document.getElementById("message")
+    const infoSection = document.getElementById("product_info")
 
-                if (data.status === "authentic") {
+    if (!code) {
+        message.className = "fake"
+        message.innerText = "Không tìm thấy mã QR."
+        infoSection.style.display = "none"
+    }
 
-                    message.className = "good"
-                    message.innerText =
-                        "Sản phẩm hợp lệ. Đây là lần quét đầu tiên của mã truy xuất."
+    // =========================
+    // VERIFY QR
+    // =========================
+    fetch("https://quanlynongsangiamao-backend.onrender.com/verify/" + code)
+        .then(res => res.json())
+        .then(data => {
 
-                }
-                else if (data.status === "scanned") {
+            if (data.status === "authentic") {
 
-                    message.className = "warning"
-                    message.innerText =
-                        "Mã QR này đã được quét lần đầu vào lúc " + data.first_scan +
-                        ". Nếu bạn chưa từng quét trước đó, sản phẩm có thể đã bị sao chép."
+                message.className = "good"
+                message.innerText =
+                    "Sản phẩm hợp lệ. Đây là lần quét đầu tiên của mã truy xuất."
 
-                }
-                else {
+            }
+            else if (data.status === "scanned") {
 
-                    message.className = "fake"
-                    message.innerText =
-                        "Mã truy xuất không tồn tại. Sản phẩm có khả năng là hàng giả."
+                message.className = "warning"
+                message.innerText =
+                    "Mã QR đã được quét lần đầu vào lúc " + data.first_scan
 
-                    infoSection.style.display = "none"
-                }
+            }
+            else {
 
+                message.className = "fake"
+                message.innerText =
+                    "Mã truy xuất không tồn tại. Sản phẩm có khả năng là hàng giả."
+
+                infoSection.style.display = "none"
+            }
+
+        })
+        .catch(() => {
+            message.className = "fake"
+            message.innerText = "Không kết nối được server."
+            infoSection.style.display = "none"
+        })
+
+    // =========================
+    // LOAD PRODUCT DATA
+    // =========================
+    fetch("https://quanlynongsangiamao-backend.onrender.com/product/" + code)
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data || data.length === 0) return
+
+            const p = data[0]
+
+            document.getElementById("product").innerText = p.pName
+            document.getElementById("producer").innerText = p.prName
+            document.getElementById("address").innerText = p.address
+
+            document.getElementById("farm").innerText = p.farmLoc
+            document.getElementById("packing_location").innerText = p.packLoc
+
+            document.getElementById("harvest").innerText =
+                new Date(p.harDate).toLocaleDateString("vi-VN")
+
+            document.getElementById("packing").innerText =
+                new Date(p.packDate).toLocaleDateString("vi-VN")
+
+            document.getElementById("delivery").innerText =
+                new Date(p.deliDate).toLocaleDateString("vi-VN")
+
+            const certContainer = document.getElementById("cert_list")
+            certContainer.innerHTML = ""
+
+            data.forEach(cert => {
+
+                if (!cert.typeName) return
+
+                certContainer.innerHTML += `
+                <div class="cert-box">
+                    <div class="info">
+                        <span class="label">Tiêu chuẩn:</span> ${cert.typeName}
+                    </div>
+
+                    <div class="info">
+                        <span class="label">Mã chứng nhận:</span> ${cert.certNum}
+                    </div>
+
+                    <div class="info">
+                        <span class="label">Hiệu lực đến:</span>
+                        ${new Date(cert.expDate).toLocaleDateString("vi-VN")}
+                    </div>
+
+                    ${cert.certImg
+                        ? `<img src="https://quanlynongsangiamao-backend.onrender.com${cert.certImg}" class="cert-img">`
+                        : ""
+                    }
+                </div>
+                `
             })
 
-        // =======================
-        // LOAD PRODUCT DATA
-        // =======================
-        fetch("https://quanlynongsangiamao-backend.onrender.com/product/" + code)
-            .then(res => res.json())
-            .then(data => {
+        })
+        .catch(() => {
+            console.log("Lỗi load product")
+        })
 
-                if (data.length === 0) return
-
-                const p = data[0] // chỉ lấy 1 để hiển thị info chung
-
-                // info chung
-                document.getElementById("product").innerText = p.pName
-                document.getElementById("producer").innerText = p.prName
-                document.getElementById("address").innerText = p.address
-
-                document.getElementById("farm").innerText = p.farmLoc
-                document.getElementById("packing_location").innerText = p.packLoc
-
-                document.getElementById("harvest").innerText = new Date(p.harDate).toLocaleDateString()
-                document.getElementById("packing").innerText = new Date(p.packDate).toLocaleDateString()
-                document.getElementById("delivery").innerText = new Date(p.deliDate).toLocaleDateString()
-
-                // render nhiều chứng nhận
-                const certContainer = document.getElementById("cert_list")
-                certContainer.innerHTML = ""
-
-                data.forEach(cert => {
-
-                    // nếu không có cert (LEFT JOIN null)
-                    if (!cert.typeName) return
-
-                    certContainer.innerHTML += `
-    <div class="cert-box">
-
-        <div class="info">
-            <span class="label">Tiêu chuẩn:</span> ${cert.typeName}
-        </div>
-
-        <div class="info">
-            <span class="label">Mã chứng nhận:</span> ${cert.certNum}
-        </div>
-
-        <div class="info">
-            <span class="label">Hiệu lực đến:</span> ${new Date(cert.expDate).toLocaleDateString()}
-        </div>
-
-        ${cert.certImg
-                            ? `<img src="${cert.certImg}" class="cert-img">`
-                            : ""
-                        }
-
-    </div>
-`
-                })
-
-            })
-    </script>
+</script>
 
 </body>
 
