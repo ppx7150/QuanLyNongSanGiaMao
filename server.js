@@ -172,25 +172,19 @@ app.get("/verify/:code", async (req, res) => {
         const scanTime = new Date()
         const location = "Unknown"
 
-        await sql.query`
+        const request = new sql.Request()
 
+        request.input("qrID", sql.Int, qr.qrID)
+        request.input("time", sql.DateTime, new Date())
+        request.input("ip", sql.NVarChar, ip)
+        request.input("loc", sql.NVarChar, location)
+
+        await request.query(`
         INSERT INTO SCANLOG (qrID, sTime, IP, sLoc)
+        VALUES (@qrID, @time, @ip, @loc)
+        `)
 
-        VALUES(
-
-        ${qr.qrID},
-
-        ${scanTime},
-
-        ${ip},
-
-        ${location}
-
-        )
-
-        `
-
-        if (qr.isAct === false) {
+        if (qr.isAct == 0) {
 
             await sql.query`
 
