@@ -56,7 +56,7 @@
         // LOAD DATA
         async function loadLogs() {
 
-            const res = await fetch("/admin/scanlogs")
+            const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/scanlogs")
             const data = await res.json()
 
             let html = ""
@@ -95,7 +95,7 @@
 
             if (!confirm("Xóa log này?")) return
 
-            await fetch("/admin/api/scanlogs/" + id, {
+            await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/scanlogs/" + id, {
                 method: "DELETE"
             })
 

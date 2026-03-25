@@ -136,7 +136,7 @@
 
         async function loadProducts() {
 
-            const res = await fetch("/admin/api/products")
+            const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/products")
             const data = await res.json()
 
             let html = ""
@@ -180,7 +180,7 @@
                 if (editingId) {
 
                     // UPDATE
-                    await fetch("/admin/api/products/" + editingId, {
+                    await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/products/" + editingId, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ name, category, description })
@@ -192,7 +192,7 @@
                 } else {
 
                     // CREATE
-                    await fetch("/admin/api/products", {
+                    await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/products", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ id, name, category, description })
@@ -232,7 +232,7 @@
 
             if (!confirm("Bạn có chắc muốn xóa?")) return
 
-            await fetch("/admin/api/products/" + id, {
+            await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/products/" + id, {
                 method: "DELETE"
             })
 

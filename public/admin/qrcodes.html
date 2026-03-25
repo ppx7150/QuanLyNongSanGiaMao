@@ -91,7 +91,7 @@
 
         async function loadBatch() {
 
-            const res = await fetch("/admin/api/batch")
+            const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/batch")
             const data = await res.json()
 
             let html = ""
@@ -117,7 +117,7 @@
 
             const id = document.getElementById("batch").value
 
-            const res = await fetch("/admin/api/batch/" + id)
+            const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/batch/" + id)
             const data = await res.json()
 
             if (!data) {
@@ -144,7 +144,7 @@
                 return
             }
 
-            const res = await fetch("/admin/api/qrcode/generate", {
+            const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/qrcode/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ batch_id, amount })
@@ -178,7 +178,7 @@
 
             const batch_id = document.getElementById("batch").value
 
-            const res = await fetch("/admin/api/qrcode/" + batch_id)
+            const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/qrcode/" + batch_id)
             const data = await res.json()
 
             let html = ""

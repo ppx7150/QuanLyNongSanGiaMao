@@ -86,7 +86,7 @@ let editingId = null
 // LOAD DATA
 async function loadProducers() {
 
-    const res = await fetch("/admin/api/producers")
+    const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/producers")
     const data = await res.json()
 
     let html = ""
@@ -133,7 +133,7 @@ async function saveProducer() {
 
         if (editingId) {
 
-            await fetch("/admin/api/producers/" + editingId, {
+            await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/producers/" + editingId, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, address })
@@ -143,7 +143,7 @@ async function saveProducer() {
 
         } else {
 
-            await fetch("/admin/api/producers", {
+            await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/producers", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id, name, address })
@@ -197,7 +197,7 @@ async function deleteProducer(id) {
 
     if (!confirm("Xóa producer này?")) return
 
-    const res = await fetch("/admin/api/producers/" + id, {
+    const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/producers/" + id, {
         method: "DELETE"
     })
 

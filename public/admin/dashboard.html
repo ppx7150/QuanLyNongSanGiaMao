@@ -71,7 +71,7 @@
 
         async function loadStats() {
 
-            const res = await fetch("/admin/dashboard")
+            const res = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/dashboard")
             const data = await res.json()
 
             document.getElementById("totalQR").innerText = data.totalQR

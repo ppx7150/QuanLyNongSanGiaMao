@@ -113,9 +113,9 @@
         // LOAD DROPDOWN
         async function loadDropdown() {
 
-            const types = await fetch("/admin/api/cert-types").then(r => r.json())
-            const products = await fetch("/admin/api/products").then(r => r.json())
-            const producers = await fetch("/admin/api/producers").then(r => r.json())
+            const types = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/cert-types").then(r => r.json())
+            const products = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/products").then(r => r.json())
+            const producers = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/producers").then(r => r.json())
 
             document.getElementById("type").innerHTML =
                 types.map(t => `<option value="${t.typeID}">${t.typeName}</option>`).join("")
@@ -130,7 +130,7 @@
         // LOAD TABLE
         async function load() {
 
-            const data = await fetch("/admin/api/certifications").then(r => r.json())
+            const data = await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/certifications").then(r => r.json())
 
             let html = ""
 
@@ -185,7 +185,7 @@
 
             if (editingId) {
 
-                await fetch("/admin/api/certifications/" + editingId, {
+                await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/certifications/" + editingId, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body)
@@ -195,7 +195,7 @@
 
             } else {
 
-                await fetch("/admin/api/certifications", {
+                await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/certifications", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body)
