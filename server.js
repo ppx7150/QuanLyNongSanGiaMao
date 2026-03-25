@@ -11,12 +11,14 @@ app.use(express.static("public"))
 ================================ */
 
 const config = {
-    user: "sa",
-    password: "123456",
-    server: "localhost",
+    user: "saadmin",
+    password: "123456Aa@",
+    server: "qlnsgm.database.windows.net",
     database: "QuanLyNongSanGiaMao",
+    port: 1433,
     options: {
-        trustServerCertificate: true
+        encrypt: true,
+        trustServerCertificate: false
     }
 }
 
