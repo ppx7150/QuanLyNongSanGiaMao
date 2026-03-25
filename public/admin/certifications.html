@@ -207,7 +207,7 @@
 
         // DELETE
         async function del(id) {
-            await fetch("/admin/api/certifications/" + id, { method: "DELETE" })
+            await fetch("https://quanlynongsangiamao-backend.onrender.com/admin/api/certifications/" + id, { method: "DELETE" })
             load()
         }
 
