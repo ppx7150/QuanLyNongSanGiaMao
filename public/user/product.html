@@ -194,14 +194,14 @@
                 message.className = "warning"
                 message.innerText =
                     "Mã QR đã được quét lần đầu vào lúc " + data.first_scan +
-                    ". Nếu bạn chưa từng quét trước đó, sản phẩm có thể đã bị sao chép."
+                    ". Nếu bạn chưa từng quét mã truy xuất này trước đó, sản phẩm có thể đã bị sao chép mã QR."
 
             }
             else {
 
                 message.className = "fake"
                 message.innerText =
-                    "Mã truy xuất không tồn tại. Sản phẩm có khả năng là hàng giả."
+                    "Mã truy xuất không tồn tại trong hệ thống. Sản phẩm có khả năng là hàng giả."
 
                 infoSection.style.display = "none"
             }
